@@ -10,6 +10,17 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+
+library(caret)
+library(tidyverse)
+library(dplyr)
+library(partykit)
+library(randomForest)
+
+```
+
+
+```{r}
 loan <- read.csv("loan.csv")
 ```
 
@@ -17,8 +28,8 @@ loan <- read.csv("loan.csv")
 ```{r}
 set.seed(100)
 idx <-  sample(nrow(loan), nrow(loan)*0.8)
-train <- loan[idx,]
-test <- loan[-idx,]
+data_train <- loan[idx,]
+data_test <- loan[-idx,]
 ```
 
 
@@ -28,8 +39,54 @@ prop.table(table(train$default))
 
 
 ```{r}
-library(caret)
-train <- downSample(x=train[,-17], y=train$default, yname="default")
-prop.table(table(train$default))
+data_train <- downSample(x=data_train[,-17], y=data_train$default, yname="default")
+prop.table(table(data_train$default))
+```
+
+```{r}
+glimpse(loan)
+```
+
+```{r}
+loan %>% 
+  filter(default=="no") %>% 
+  group_by(purpose) %>% 
+  summarise(n())
+```
+
+
+```{r}
+
+model_dt <- ctree(default~., data_train, control = ctree_control(mincriterion=0.10))
+plot(model_dt,type="simple")
+```
+```{r}
+pred_train_dt <- predict(model_dt, newdata = data_train, type="response")
+pred_test_dt <- predict(model_dt, newdata = data_test, type="response")
+```
+```{r}
+confusionMatrix(as.factor(pred_train_dt), as.factor(data_train$default))
+confusionMatrix(as.factor(pred_test_dt), as.factor(data_test$default))
+```
+```{r}
+model_rf <- readRDS("model_rf.RDS")
+```
+
+```{r}
+model_rf$finalModel
+```
+
+```{r}
+
+# predict model
+predict_rf <- predict(model_rf, data_test)
+predict_rf_train <- predict(model_rf, data_train)
+
+# predict model dengan nilai peluang
+predict_rf_raw <- predict(model_rf, data_test, type="raw")
+```
+
+```{r}
+varImp(model_rf)
 ```
 
