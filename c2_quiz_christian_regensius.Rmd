@@ -1,0 +1,35 @@
+---
+title: "quiz"
+author: "Christian Regensius"
+date: "14/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+loan <- read.csv("loan.csv")
+```
+
+
+```{r}
+set.seed(100)
+idx <-  sample(nrow(loan), nrow(loan)*0.8)
+train <- loan[idx,]
+test <- loan[-idx,]
+```
+
+
+```{r}
+prop.table(table(train$default))
+```
+
+
+```{r}
+library(caret)
+train <- downSample(x=train[,-17], y=train$default, yname="default")
+prop.table(table(train$default))
+```
+
